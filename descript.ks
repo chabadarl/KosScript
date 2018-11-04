@@ -1,7 +1,8 @@
 
 {
   runoncepath("0:/librairies/ENU").
-
+  runliblist:add("ENU").
+  
   log "" to "0:/desc".
   enum["each"](ship:parts,printAllMod@).
   movepath("0:/desc","0:/ship/" + ship:name + "/description").

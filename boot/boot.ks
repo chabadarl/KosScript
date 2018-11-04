@@ -68,7 +68,7 @@ function update {
           copypath("0:/librairies/"+lib,"1:/lib/"+lib).
           copypath("0:/librairies/"+lib,"0:/ship/"+ship:name+"/lib/"+lib).
           runoncepath("1:/lib/"+lib).
-          runliblist:add(file).
+          runliblist:add(lib).
         } else {
           notify("WARNING! : " + lib + " doesnot exist.",RED).
         }
@@ -99,8 +99,9 @@ function getlib{
   if not getliblist:contains(lib){
     getliblist:add(lib).
     log "" to glibs.
-    delete(glibs).
+    deletepath("1:/glibs").
     writejson(getliblist,glibs).
+    update().
   }
   if not runliblist:contains(lib) return false.
   return true.
@@ -110,9 +111,9 @@ function runlib{
   if not exists("1:/lib/") createdir("1:/lib/").
   cd("1:/lib/").
   list files in listfiles.
-  for file in listfiles{
-    runoncepath(file).
-    runliblist:add(file).
+  for lib in listfiles{
+    runoncepath(lib).
+    runliblist:add(lib).
   }
   cd("1:/").
 }
@@ -131,6 +132,8 @@ if not exists(glibs) {
   }
 else set getliblist to readjson(glibs).
 set runliblist to UniqueSet().
+print getliblist.
+print "to get".
 //open terminal at first iteration of the booting process.
 
 

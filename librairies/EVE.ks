@@ -94,14 +94,14 @@
 //ECU
 {
   //-------------------------------------------------------------------------------------------
-  function calculateecproduction  {
-    local modList is ship:modulesnamed("ec?").
-    local ecproduction is 0.
-    for mod in modList {
-      ecproduction= ecproduction + mod:getfield(“”).
-    }
-    return ecproduction.
-  }
+  //function calculateecproduction  {
+  //  local modList is ship:modulesnamed("ec?").
+  //  local ecproduction is 0.
+  //  for mod in modList {
+  //    set ecproduction to ecproduction + mod:getfield("").
+  //  }
+  //  return ecproduction.
+  //}
 
   //-------------------------------------------------------------------------------------------
   function ActivateAntennae {
@@ -109,8 +109,8 @@
     local excludeTags is list("", "empty", "none").
 
     for mod in modList {
-     while EClevelOK {
-        if mod:hasevent("Activate") and EClevelOK mod:doevent("Activate").
+     until not EClevelOK() {
+        if mod:hasevent("Activate")  mod:doevent("Activate").
         if mod:hasfield("target") and not excludeTags:contains(mod:part:tag) { mod:setfield("target", mod:part:tag). }
       }
     }
@@ -126,7 +126,7 @@
 
   //-------------------------------------------------------------------------------------------
   function ECshut{
-    notify(“Alerte ! Batteries vides”).
+    notify("Alerte ! Batteries vides").
   }
 
   //-------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@
     for resource in resourcelist {
       if resource:name = "electriccharge" {
         if resource:amount / resource:capacity > 0.1 and ECcomsommation () > 0 return true.
-        notify(“EC level decreasing.”).
+        notify("EC level decreasing.").
         if shutdown and ECcomsommation()<0  and resource:amount / resource:capacity <= 0.1 ECshut.
         return false.
       }
