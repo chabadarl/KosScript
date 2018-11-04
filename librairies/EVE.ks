@@ -80,7 +80,7 @@
         notify("fairings out").
       }
       for module in ship:modulesnamed("proceduralfairingdecoupler") {
-        module:doevent("jettison").
+        module:doevent("jettison fairing").
         notify("fairings out").
       }
       return true.
