@@ -69,6 +69,7 @@ function update {
           copypath("0:/librairies/"+lib,"0:/ship/"+ship:name+"/lib/"+lib).
           runoncepath("1:/lib/"+lib).
           runliblist:add(lib).
+          print lib + " is loaded".
         } else {
           notify("WARNING! : " + lib + " doesnot exist.",RED).
         }
@@ -97,6 +98,7 @@ function export {
 function getlib{
   parameter lib.
   if not getliblist:contains(lib){
+    print "Getting " + lib.
     getliblist:add(lib).
     log "" to glibs.
     deletepath("1:/glibs").
@@ -113,7 +115,8 @@ function runlib{
   list files in listfiles.
   for lib in listfiles{
     runoncepath(lib).
-    runliblist:add(lib).
+    runliblist:add(lib:name).
+    print lib:name + " is loaded".
   }
   cd("1:/").
 }
@@ -132,8 +135,6 @@ if not exists(glibs) {
   }
 else set getliblist to readjson(glibs).
 set runliblist to UniqueSet().
-print getliblist.
-print "to get".
 //open terminal at first iteration of the booting process.
 
 
@@ -149,8 +150,6 @@ export().
 
 //looking for libraries
 runlib().
-print runliblist.
-print "libraries loaded".
 
 
 // run main if it exists.
