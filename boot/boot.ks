@@ -124,8 +124,14 @@ function runlib{
 
 //main
 notify(" Booting ...").
-if sessiontime < 5 core:doevent("open terminal").
+//open terminal at first iteration of the booting process.
+if sessiontime < 5 {
+  core:doevent("open terminal").
+  set terminal:width to 100.
+  set terminal:height to 20.
+}
 
+//set variables and list to be used in the boot script and to handle librairies.
 set TimeToWaitConnection to 1000.
 set TimeToWaitReboot to 10.
 set glibs to "1:/glibs".
@@ -135,7 +141,7 @@ if not exists(glibs) {
   }
 else set getliblist to readjson(glibs).
 set runliblist to UniqueSet().
-//open terminal at first iteration of the booting process.
+
 
 
 // delete temp files that shouldn't be there
@@ -144,7 +150,7 @@ transfert("tmp.exe.ks",core:volume:name,core:volume:name,0).
 transfert("flightplan-" + ship:name,core:volume:name,core:volume:name,0).
 transfert("main-" + ship:name,core:volume:name,core:volume:name,0).
 
-//looking for update
+//looking for update and files to export.
 update().
 export().
 

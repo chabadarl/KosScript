@@ -2,12 +2,25 @@
 // This program launches a ship from the KSC and flies it into orbit
 
 //Flight Parameter
-set targetApoapsis to 100000.    //Target apoapsis in meters
-set targetPeriapsis to 100000.   //Target periapsis in meters
-set altStartGT to 10000.        //Altitude to start Gravity Turn
-set targetInclinaison to 0.     // Target Inclinaison  in degree
-set altToNoSteer to 80000.      // altitude where steer =0
-set startTime to 0.             // time to start the mission
+
+if exist("1:/flightParameters") {
+  runpath("1:/flightParameters").
+}
+else{
+  set targetApoapsis to 700000.    //Target apoapsis in meters
+  set targetPeriapsis to 100000.   //Target periapsis in meters
+  set altStartGT to 10000.        //Altitude to start Gravity Turn
+  set targetInclinaison to 0.     // Target Inclinaison  in degree
+  set altToNoSteer to 50000.      // altitude where steer =0
+  set startTime to time.             // time to start the mission
+  set rota to 90.
+}
+
+set prevThrust to 0.
+set finalTVAL TO 0.
+set targetPitch TO 0.
+LOCK steering to heading (90-targetInclinaison ,targetPitch)+r(0,0,-rota).
+LOCK throttle to finalTVAL.
 
 set main_sequence to list(
   "Prelaunch", lastChance@,
@@ -40,13 +53,7 @@ function lastChance{
   set finalTVAL TO 0.         //No throttle to start with
   set targetPitch TO 90.     //Starting  up
   set TVAL to 0.
-  set prevThrust to 0.
   EVE_Staging(FALSE).
-
-  // Initiate Locking of steer and throttle
-  set rota to 90.
-  LOCK steering to heading (90-targetInclinaison ,targetPitch)+r(0,0,-rota).
-  LOCK throttle to finalTVAL.
 
   // end of initialisation
   if time:seconds > startTime:seconds mission["next"]().
@@ -86,11 +93,11 @@ function theCriticalPart{
   //Gravity turn
   parameter mission.
 
-  set targetPitch to max( 5, 85 * ((1 - (alt:radar-altStartGT) / (altToNoSteer-10000)))^2).            //Pitch over gradually until levelling out to 5 degrees at 50km
+  set targetPitch to max( 5, 85 * ((1 - (alt:radar-altStartGT) / (altToNoSteer-altStartGT)))^2).            //Pitch over gradually until levelling out to 5 degrees at 50km
   set TVAL to 1.
   if ship:velocity:surface:mag >(100 + 2000*(alt:radar/altToNoSteer)) set TVAL to 0.50.
 
-  if ship:apoapsis > targetApoapsis - 200 {
+  if targetPitch = 5  {
     mission["next"]().
   }
 }
@@ -99,20 +106,20 @@ function waitingForActualSpace{
   //Coast to Ap
   parameter mission.
 
-  set targetPitch to 3. //Stay pointing 3 degrees above horizon
+  set targetPitch to 0. //Stay pointing 3 degrees above horizon
   set TVAL to 0. //Engines off.
   if ship:apoapsis < targetApoapsis  {
     set TVAL to 0.1.
   }
+  if ship:apoapsis + 5000 < targetApoapsis  {
+    set TVAL to 0.5.
+  }
+  if ship:apoapsis + 10000 < targetApoapsis  {
+    set TVAL to 1.
+  }
 
-  if (ship:altitude > 70000) and (eta:apoapsis > 60) and (verticalspeed > 0) {
-    if warp = 0 {        // If we are not time warping
-    wait 1.         //Wait to make sure the ship is stable
-    set warp TO 3. //Be really careful about warping
-    }
-  }.
-  else if eta:apoapsis < 60 {
-    set warp to 0.
+  if (ship:altitude > 70000) and (verticalspeed > 0) and (TVAL=0) {
+    wait 1.  //Wait to make sure the ship is stable
     mission["next"]().
   }
 }
@@ -122,12 +129,32 @@ function lastButNotLeast{
   parameter mission.
   set targetPitch to 0.
 
-  if eta:apoapsis < 5 or verticalspeed < 0 { //If we're less 5 seconds from Ap or loosing altitude
-    set TVAL to 1.
+
+  set v1 to sqrt(ship:orbit:body:mu * (2 /(ship:apoapsis +ship:orbit:body:radius)-1/ship:orbit:semimajoraxis)).
+  set v2 to sqrt(ship:orbit:body:mu * (2 /(ship:apoapsis +ship:orbit:body:radius)-1/(2*ship:orbit:body:radius+ship:apoapsis+targetPeriapsis))).
+  set dv to v2-v1.
+  print "dv : "+ round(dv,3) at (5,2).
+  print "time to start: "+ round(orb_time4man(v2-v1)/2,1) at (5,3).
+  if ( eta:apoapsis < orb_time4man(v2-v1)/2 ) {
+    if not warp = 0 set warp to 0.
+    set TVAL to min(0.9*orb_time4man(v2-v1), 1).
+  } else {
+    set TVAL to 0.
+    if eta:apoapsis > orb_time4man(v2-v1)/2+200 set warp TO 3. //Be really careful about warping
+      else{
+        if eta:apoapsis > orb_time4man(v2-v1)/2+100 {set warp TO 2.} //Be really careful about warping
+        else{
+          if eta:apoapsis > orb_time4man(v2-v1)/2+20 {set warp TO 0.} //Be really careful about warping
+        }
+      }
+
   }
-  if (ship:periapsis > targetPeriapsis) or (ship:periapsis > targetApoapsis * 0.98) or (ship:periapsis > 70000 and ship:apoapsis >targetApoapsis * 1.1) {
+
+
+  if (ship:periapsis + 10 > targetPeriapsis) or (ship:periapsis > targetApoapsis * 0.98) or (ship:periapsis > 70000 and ship:apoapsis >targetApoapsis * 1.1) {
     //If the periapsis is high enough or getting close to the apoapsis or the apoapsis start to increase too much
     set TVAL to 0.
+    clearscreen.
     mission["next"]().
   }
 }
@@ -153,8 +180,8 @@ function printing{
 
   print "RUNMODE    : " + mission["runmode"]() + " : Mission Time : " + (time-startTime) at (5,4).
   print "ALTITUDE   : " + round(ship:altitude) + " m     " at (5,5).
-  print "APOAPSIS   : " + round(ship:apoapsis) + " m     " at (5,6).
-  print "PERIAPSIS  : " + round(ship:periapsis) + " m     " at (5,7).
+  print "APOAPSIS   : " + round(ship:apoapsis) + " m       (target: " + targetApoapsis + "m)"at (5,6).
+  print "PERIAPSIS  : " + round(ship:periapsis) + " m     (target: " + targetPeriapsis + "m)" at (5,7).
   print "ETA TO AP  : " + round(eta:apoapsis) + " s     " at (5,8).
   print "PITCH      : " + round (targetPitch,1) + " °     " at (5,9).
   print "TROTTLE    : " + finalTVAL*100 + " %     " at (5,10).
@@ -173,10 +200,21 @@ function Stage_check {
 
 function fairingdecouple{
   parameter mission.
-  if EVE_fairdecoup() mission["remove_event"]("fairingsOut").
-
+  if EVE_fairdecoup(){
+    mission["remove_event"]("fairingsOut").
+    mission["add_event"]("PanelsOn",ouvrelespanneaux@).
+  }
 }
 
+function ouvrelespanneaux{
+  parameter mission.
+  if ship:altitude > 75000 {
+    panels on.
+    lights on.
+
+    mission["remove_event"]("PanelsOn").
+  }
+}
 
 
 run_mission(main_sequence,events).

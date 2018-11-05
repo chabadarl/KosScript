@@ -117,7 +117,7 @@ function fli_executenode {
 
     until vdot(n:burnvector, v) < 0 {
        man_staging(autostage).
-       lock throttle to min(0.9*man_orb_time4man(n:burnvector:mag), 1).
+       lock throttle to min(0.9*orb_time4man(n:burnvector:mag), 1).
      }
    lock throttle to 0.
    lock steering to actualsteer.

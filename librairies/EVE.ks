@@ -56,7 +56,8 @@
       until i > 5 {
           set telco_target to "OmniSat200"+i.
           log "* " + ant + " : " + telco_target to "1:/out/eve_log".
-          ant:getmodule("ModuleRTAntenna"):setfield("target",telco_target).
+          //ant:getmodule("ModuleRTAntenna"):setfield("target",telco_target).
+          //NEED TO BE FIXED;
           wait 1.
         if addons:rt:hasconnection(ship) {
           return true.
