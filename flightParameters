@@ -1,0 +1,7 @@
+set targetApoapsis to 700000.    //Target apoapsis in meters
+set targetPeriapsis to 100000.   //Target periapsis in meters
+set altStartGT to 10000.        //Altitude to start Gravity Turn
+set targetInclinaison to 0.     // Target Inclinaison  in degree
+set altToNoSteer to 50000.      // altitude where steer =0
+set startTime to time.             // time to start the mission
+set rota to 90.
