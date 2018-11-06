@@ -3,12 +3,12 @@
 
 //Flight Parameter
 
-if exist("1:/flightParameters") {
+if exists("1:/flightParameters") {
   runpath("1:/flightParameters").
 }
 else{
-  set targetApoapsis to 700000.    //Target apoapsis in meters
-  set targetPeriapsis to 100000.   //Target periapsis in meters
+  set targetApoapsis to 1585000.    //Target apoapsis in meters
+  set targetPeriapsis to 549934.   //Target periapsis in meters
   set altStartGT to 10000.        //Altitude to start Gravity Turn
   set targetInclinaison to 0.     // Target Inclinaison  in degree
   set altToNoSteer to 50000.      // altitude where steer =0
@@ -172,6 +172,7 @@ function inSpace{
   set ship:control:pilotmainthrottle to 0.
   clearscreen.
   mission["terminate"]().
+  deletepath("1:/GTO").
 }
 
 function printing{
